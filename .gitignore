@@ -1,0 +1,47 @@
+# Dependencias
+node_modules/
+.pnp/
+.pnp.js
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Rutas tipadas de expo-router (se generan al arrancar)
+.expo/types/
+
+# Nativo
+android/
+ios/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Builds
+build/
+*.tsbuildinfo
+
+# Variables de entorno (nunca versionar)
+.env
+.env.local
+.env.*.local
+
+# Memoria de herramientas
+.codebase-memory/
+
+# Editores / SO
+.DS_Store
+.idea/
+*.swp
+*~
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
