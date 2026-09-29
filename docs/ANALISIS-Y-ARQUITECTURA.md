@@ -2,7 +2,7 @@
 
 > Documento de respaldo. Recoge el análisis de la base funcional (mapa conceptual + wireframes),
 > la opinión técnica, el encaje con el stack de referencia, el modelo de datos propuesto y el
-> plan por fases. Última actualización: 2026-09-28.
+> plan por fases. Última actualización: 2026-09-29.
 
 ---
 
@@ -174,3 +174,63 @@ Los 6 dominios completos, i18n, tablet, accesibilidad.
 4. ¿**Multi-perfil** hasta cuántos? ¿Los perfiles de menores requieren consentimiento parental?
 5. ¿Cuenta obligatoria o invitado primero?
 6. ¿Reutilizamos el repo de referencia como plantilla o partimos limpio?
+
+---
+
+## 9. Estado actual del proyecto
+
+### Completado
+
+- Repositorio creado en GitHub: `davidvidaldelrio/appfonoaudiologia`.
+- Scaffold inicial creado con Expo SDK 57, React Native, TypeScript y Expo Router.
+- Identificador técnico provisional: `appfonoaudiologia`.
+- Nombre visible provisional: `HáblaMejor`.
+- Navegación inicial con cinco pestañas: Inicio, Rutas, Practicar, Progreso y Perfil.
+- Contexto global inicial en `LearningContext` para perfil activo, racha y minutos practicados.
+- Componentes base: pantalla, barra de tabs y tarjetas de rutas.
+- Tres rutas demostrativas: Pronunciación, Vocabulario y Respiración y voz.
+- Actividad demostrativa de pronunciación con la palabra objetivo `rana`.
+- Servicio inicial de práctica con tipos de dominio, rutas y cálculo de nivel.
+- Catálogo inicial de textos en español.
+- Primer test unitario para el cálculo de niveles.
+- Variables de entorno documentadas en `.env.example`.
+- Revisión visual realizada en web mediante Expo en `http://localhost:8081`.
+
+### Validaciones realizadas
+
+- `npm install`: correcto.
+- `npm run typecheck`: correcto.
+- `npm test -- --runInBand`: correcto; 1 suite y 1 test aprobados.
+- `npm run lint`: correcto.
+- Rama `main` sincronizada con el repositorio remoto.
+
+### Decisiones que siguen pendientes
+
+- Confirmar el nombre definitivo entre `HáblaMejor` y `HábalaMejor`.
+- Decidir si el primer flujo permite invitado o exige autenticación.
+- Elegir proveedor de evaluación de voz antes de implementar el feedback real.
+- Definir el contenido validado por un fonoaudiólogo para la primera ruta.
+
+---
+
+## 10. Siguiente paso: onboarding del MVP
+
+El siguiente incremento debe implementar el onboarding antes de ampliar el catálogo de rutas.
+La primera versión debe ser breve y permitir probar el flujo principal sin backend:
+
+1. Pantalla de bienvenida con la propuesta de valor.
+2. Selección de tipo de usuario: para mí, para mi hijo/a o para un adulto mayor.
+3. Creación del perfil local con nombre y rango de edad.
+4. Selección de uno o más objetivos: pronunciación, lenguaje, voz, memoria o lectura.
+5. Pantalla de confirmación que dirige a Inicio con una ruta recomendada.
+
+Para este paso se recomienda:
+
+- Guardar el estado de onboarding localmente para permitir modo invitado.
+- Mantener todos los textos en `services/i18n.ts`.
+- No integrar todavía autenticación, pagos ni evaluación de voz real.
+- Añadir tests para la selección de objetivos y la finalización del onboarding.
+- Mantener la integración de audio detrás de un servicio, no dentro de las pantallas.
+
+El criterio de terminado será: un usuario nuevo puede abrir la app, completar el onboarding,
+crear un perfil, seleccionar un objetivo y llegar a una pantalla de Inicio personalizada.
