@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "HáblaMejor",
+    "slug": "appfonoaudiologia",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "appfonoaudiologia",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.davidvidaldelrio.appfonoaudiologia"
+    },
+    "android": {
+      "package": "com.davidvidaldelrio.appfonoaudiologia",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router", "expo-web-browser", "expo-audio"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
