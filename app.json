@@ -18,7 +18,7 @@
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": ["expo-router", "expo-web-browser", "expo-audio"],
+    "plugins": ["expo-router", "expo-web-browser", ["expo-audio", { "microphonePermission": "Permite que HáblaMejor use el micrófono para evaluar tu práctica." }]],
     "experiments": {
       "typedRoutes": true
     }

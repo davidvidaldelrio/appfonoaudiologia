@@ -195,6 +195,13 @@ Los 6 dominios completos, i18n, tablet, accesibilidad.
 - Primer test unitario para el cálculo de niveles.
 - Variables de entorno documentadas en `.env.example`.
 - Revisión visual realizada en web mediante Expo en `http://localhost:8081`.
+- Onboarding local implementado: bienvenida, tipo de usuario, perfil, rango de edad, objetivos y confirmación.
+- Estado del onboarding persistido con AsyncStorage para permitir modo invitado sin backend.
+- Inicio personalizado con el nombre del perfil creado y ruta recomendada de Pronunciación.
+- Inicio conectado a los objetivos del perfil, con recomendación dinámica y fallback seguro.
+- Tarjetas de rutas conectadas a una actividad con feedback local y puntuación.
+- Progreso local persistido: minutos, mejor puntuación por ruta, racha y progreso general.
+- Grabación de micrófono integrada detrás de un servicio con `expo-audio` y permiso configurado.
 
 ### Validaciones realizadas
 
@@ -202,7 +209,12 @@ Los 6 dominios completos, i18n, tablet, accesibilidad.
 - `npm run typecheck`: correcto.
 - `npm test -- --runInBand`: correcto; 1 suite y 1 test aprobados.
 - `npm run lint`: correcto.
+- `npx expo export --platform web`: correcto; incluye `/activity/[routeId]`.
+- `npm test -- --runInBand`: correcto; 3 suites y 6 tests aprobados tras separar el runtime nativo.
 - Rama `main` sincronizada con el repositorio remoto.
+- `npm run typecheck`: correcto tras implementar onboarding.
+- `npm test -- --runInBand`: correcto; 2 suites y 3 tests aprobados.
+- `npm run lint`: correcto.
 
 ### Decisiones que siguen pendientes
 
