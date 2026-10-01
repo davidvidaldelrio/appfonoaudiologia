@@ -1,12 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { LocalProfile } from '@/services/onboarding';
+import { LocalProfile, upsertProfile } from '@/services/onboarding';
+import { syncProfileToSupabase, getSupabaseConfig } from '@/services/supabase';
 import { initialProgress, ProgressState, recordPractice as savePractice, resetDailyProgress } from '@/services/progress';
 
 type LearningState = {
   isLoading: boolean;
   onboardingComplete: boolean;
   profile: LocalProfile | null;
+  profiles: LocalProfile[];
   activeProfile: string;
   streak: number;
   minutesToday: number;
@@ -17,18 +19,34 @@ type LearningState = {
 };
 
 const PROFILE_STORAGE_KEY = '@hablamejor/profile';
+const PROFILES_STORAGE_KEY = '@hablamejor/profiles';
+const ACTIVE_PROFILE_STORAGE_KEY = '@hablamejor/activeProfile';
 const PROGRESS_STORAGE_KEY = '@hablamejor/progress';
 const LearningContext = createContext<LearningState | null>(null);
 
 export function LearningProvider({ children }: PropsWithChildren) {
   const [profile, setProfile] = useState<LocalProfile | null>(null);
+  const [profiles, setProfiles] = useState<LocalProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState<ProgressState>(initialProgress);
 
   useEffect(() => {
-    Promise.all([AsyncStorage.getItem(PROFILE_STORAGE_KEY), AsyncStorage.getItem(PROGRESS_STORAGE_KEY)])
-      .then(([storedProfile, storedProgress]) => {
-        if (storedProfile) setProfile(JSON.parse(storedProfile) as LocalProfile);
+    Promise.all([
+      AsyncStorage.getItem(PROFILES_STORAGE_KEY),
+      AsyncStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY),
+      AsyncStorage.getItem(PROFILE_STORAGE_KEY),
+      AsyncStorage.getItem(PROGRESS_STORAGE_KEY),
+    ])
+      .then(([storedProfiles, storedActiveProfile, legacyProfile, storedProgress]) => {
+        const parsedProfiles = storedProfiles ? JSON.parse(storedProfiles) as LocalProfile[] : [];
+        const fallbackProfile = legacyProfile ? JSON.parse(legacyProfile) as LocalProfile : null;
+        const nextProfiles = parsedProfiles.length ? parsedProfiles : fallbackProfile ? [fallbackProfile] : [];
+        setProfiles(nextProfiles);
+
+        const activeProfileName = storedActiveProfile ?? nextProfiles[0]?.name ?? fallbackProfile?.name ?? null;
+        const selectedProfile = nextProfiles.find((candidate) => candidate.name === activeProfileName) ?? nextProfiles[0] ?? fallbackProfile ?? null;
+        if (selectedProfile) setProfile(selectedProfile);
+
         if (storedProgress) {
           const savedProgress = JSON.parse(storedProgress) as Partial<ProgressState>;
           const hydratedProgress = { ...initialProgress, ...savedProgress, sessions: savedProgress.sessions ?? [] };
@@ -39,7 +57,13 @@ export function LearningProvider({ children }: PropsWithChildren) {
   }, []);
 
   const completeOnboarding = async (nextProfile: LocalProfile) => {
-    await AsyncStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+    const nextProfiles = upsertProfile(profiles, nextProfile);
+    await AsyncStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(nextProfiles));
+    await AsyncStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, nextProfile.name);
+    if (getSupabaseConfig().ready) {
+      await syncProfileToSupabase(nextProfile);
+    }
+    setProfiles(nextProfiles);
     setProfile(nextProfile);
   };
 
@@ -49,18 +73,26 @@ export function LearningProvider({ children }: PropsWithChildren) {
     setProgress(nextProgress);
   };
 
+  const setActiveProfile = (name: string) => {
+    const nextProfile = profiles.find((candidate) => candidate.name === name) ?? null;
+    if (!nextProfile) return;
+    setProfile(nextProfile);
+    AsyncStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, name).catch(() => undefined);
+  };
+
   const value = useMemo(() => ({
     isLoading,
-    onboardingComplete: profile !== null,
+    onboardingComplete: profile !== null || profiles.length > 0,
     profile,
-    activeProfile: profile?.name ?? '',
+    profiles,
+    activeProfile: profile?.name ?? profiles[0]?.name ?? '',
     streak: progress.currentStreak,
     minutesToday: progress.minutesToday,
     progress,
-    setActiveProfile: (name: string) => setProfile((current) => current ? { ...current, name } : current),
+    setActiveProfile,
     recordPractice,
     completeOnboarding,
-  }), [isLoading, profile, progress]);
+  }), [isLoading, profile, profiles, progress]);
 
   return <LearningContext.Provider value={value}>{children}</LearningContext.Provider>;
 }

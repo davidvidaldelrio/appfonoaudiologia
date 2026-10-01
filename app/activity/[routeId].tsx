@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { Colors } from '@/constants/Colors';
 import { useLearning } from '@/context/LearningContext';
+import { getRouteActivity } from '@/services/practice';
 import { evaluatePractice, PracticeFeedback } from '@/services/voice';
 import { useAudioRecorderService } from '@/services/audioRecorder';
 import { t } from '@/services/i18n';
@@ -15,11 +16,8 @@ export default function ActivityScreen() {
   const [feedback, setFeedback] = useState<PracticeFeedback | null>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [recordingError, setRecordingError] = useState(false);
+  const activity = getRouteActivity(routeId ?? 'pronunciacion');
   const isPronunciation = routeId === 'pronunciacion';
-  const title = isPronunciation ? t('recommendedRouteName') : routeId === 'vocabulario' ? t('vocabularyRouteName') : routeId === 'respiracion' ? t('voiceRouteName') : routeId === 'memoria' ? t('memoryRouteName') : t('readingRouteName');
-  const prompt = isPronunciation ? t('listenAndRepeat') : routeId === 'vocabulario' ? t('vocabularyPrompt') : routeId === 'respiracion' ? t('voicePrompt') : routeId === 'memoria' ? t('memoryPrompt') : t('readingPrompt');
-  const word = isPronunciation ? t('targetWord') : routeId === 'vocabulario' ? t('vocabularyWord') : routeId === 'respiracion' ? t('voiceWord') : routeId === 'memoria' ? t('memoryWord') : t('readingWord');
-  const hint = isPronunciation ? t('activityHint') : routeId === 'vocabulario' ? t('vocabularyHint') : routeId === 'respiracion' ? t('voiceHint') : routeId === 'memoria' ? t('memoryHint') : t('readingHint');
 
   const recordAnswer = async () => {
     if (!isPronunciation) {
@@ -48,7 +46,7 @@ export default function ActivityScreen() {
     }, 400);
   };
 
-  return <Screen><View style={styles.content}><Text style={styles.eyebrow}>{t('activityEyebrow')}</Text><Text style={styles.title}>{title}</Text><Text style={styles.subtitle}>{prompt}</Text><View style={styles.activity}><Text style={styles.mouth}>{isPronunciation ? '◉' : routeId === 'vocabulario' ? '✦' : routeId === 'respiracion' ? '≈' : routeId === 'memoria' ? '✧' : '▤'}</Text><Text style={styles.prompt}>{prompt}</Text><Text style={styles.word}>{word}</Text><Text style={styles.hint}>{hint}</Text>{recordingError && <Text style={styles.error}>{t('microphonePermissionDenied')}</Text>}{feedback ? <Feedback feedback={feedback} /> : <Pressable style={styles.record} onPress={recordAnswer} disabled={isEvaluating}><Text style={styles.recordText}>{isEvaluating ? t('evaluating') : isPronunciation ? recorder.isRecording ? `■  ${t('stopRecording')}` : `●  ${t('recordAnswer')}` : t('completeActivity')}</Text></Pressable>}{recorder.isRecording && <Text style={styles.timer}>{t('recordingSeconds').replace('{seconds}', String(Math.round(recorder.durationMillis / 1000)))}</Text>}</View>{feedback && <View style={styles.actions}><Pressable onPress={() => setFeedback(null)}><Text style={styles.secondary}>{t('practiceAgain')}</Text></Pressable><Pressable style={styles.primary} onPress={() => router.replace('/(tabs)/routes')}><Text style={styles.primaryText}>{t('backToRoutes')}</Text></Pressable></View>}</View></Screen>;
+  return <Screen><View style={styles.content}><Text style={styles.eyebrow}>{t('activityEyebrow')}</Text><Text style={styles.title}>{activity.title}</Text><Text style={styles.subtitle}>{activity.prompt}</Text><View style={styles.activity}><Text style={styles.mouth}>{activity.icon}</Text><Text style={styles.prompt}>{activity.prompt}</Text><Text style={styles.word}>{activity.word}</Text><Text style={styles.hint}>{activity.hint}</Text>{recordingError && <Text style={styles.error}>{t('microphonePermissionDenied')}</Text>}{feedback ? <Feedback feedback={feedback} /> : <Pressable style={styles.record} onPress={recordAnswer} disabled={isEvaluating}><Text style={styles.recordText}>{isEvaluating ? t('evaluating') : isPronunciation ? recorder.isRecording ? `■  ${t('stopRecording')}` : `●  ${t('recordAnswer')}` : t('completeActivity')}</Text></Pressable>}{recorder.isRecording && <Text style={styles.timer}>{t('recordingSeconds').replace('{seconds}', String(Math.round(recorder.durationMillis / 1000)))}</Text>}</View>{feedback && <View style={styles.actions}><Pressable onPress={() => setFeedback(null)}><Text style={styles.secondary}>{t('practiceAgain')}</Text></Pressable><Pressable style={styles.primary} onPress={() => router.replace('/(tabs)/routes')}><Text style={styles.primaryText}>{t('backToRoutes')}</Text></Pressable></View>}</View></Screen>;
 }
 
 function Feedback({ feedback }: { feedback: PracticeFeedback }) {

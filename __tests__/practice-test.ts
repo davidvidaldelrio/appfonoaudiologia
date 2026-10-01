@@ -1,4 +1,4 @@
-import { calculateLevel, getRecommendedRoute } from '@/services/practice';
+import { calculateLevel, getRecommendedRoute, getRouteActivity } from '@/services/practice';
 import { initialProgress, getDailyGoalProgress, getOverallProgress, recordPractice, resetDailyProgress } from '@/services/progress';
 import { getAchievements, getLevel, getLevelProgress } from '@/services/achievements';
 
@@ -13,6 +13,12 @@ describe('practice', () => {
     expect(getRecommendedRoute(['voice']).id).toBe('respiracion');
     expect(getRecommendedRoute(['reading']).id).toBe('lectura');
     expect(getRecommendedRoute([]).id).toBe('pronunciacion');
+  });
+
+  it('devuelve contenido específico por ruta y un fallback seguro', () => {
+    expect(getRouteActivity('vocabulario').word).toContain('Me gusta leer');
+    expect(getRouteActivity('respiracion').prompt).toBe('Practica tu respiración');
+    expect(getRouteActivity('ruta-no-existente').id).toBe('pronunciacion');
   });
 
   it('persiste puntuación, sesiones, XP y racha en días consecutivos', () => {

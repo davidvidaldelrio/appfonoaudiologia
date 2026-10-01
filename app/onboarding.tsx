@@ -5,6 +5,7 @@ import { Colors } from '@/constants/Colors';
 import { useLearning } from '@/context/LearningContext';
 import { AgeRange, canFinishOnboarding, Goal, LocalProfile, toggleGoal, UserType } from '@/services/onboarding';
 import { t } from '@/services/i18n';
+import { getRecommendedRoute } from '@/services/practice';
 
 const ageRanges: AgeRange[] = ['0-6', '7-12', '13-17', '18-59', '60+'];
 const ageLabels: Record<AgeRange, Parameters<typeof t>[0]> = { '0-6': 'age0to6', '7-12': 'age7to12', '13-17': 'age13to17', '18-59': 'age18to59', '60+': 'age60plus' };
@@ -15,11 +16,12 @@ const goals: { key: Goal; label: Parameters<typeof t>[0] }[] = [
   { key: 'memory', label: 'goalMemory' },
   { key: 'reading', label: 'goalReading' },
 ];
+const routeNameKeys: Record<string, Parameters<typeof t>[0]> = { pronunciacion: 'recommendedRouteName', vocabulario: 'vocabularyRouteName', respiracion: 'voiceRouteName', memoria: 'memoryRouteName', lectura: 'readingRouteName' };
 
 export default function OnboardingScreen() {
   const { completeOnboarding } = useLearning();
   const [step, setStep] = useState(0);
-  const [profile, setProfile] = useState<Partial<LocalProfile>>({ goals: [] });
+  const [profile, setProfile] = useState<Partial<LocalProfile>>({ name: '', goals: [] });
   const [error, setError] = useState('');
 
   const update = (changes: Partial<LocalProfile>) => { setProfile((current) => ({ ...current, ...changes })); setError(''); };
@@ -43,7 +45,7 @@ export default function OnboardingScreen() {
     {step === 1 && <SelectionStep title={t('onboardingWhoTitle')} options={[['self', t('forMe')], ['child', t('forChild')], ['olderAdult', t('forOlderAdult')]]} selected={profile.userType} onSelect={(value) => update({ userType: value as UserType })} />}
     {step === 2 && <View><Text style={styles.title}>{t('onboardingProfileTitle')}</Text><Text style={styles.label}>{t('nameLabel')}</Text><TextInput style={styles.input} value={profile.name ?? ''} onChangeText={(name) => update({ name })} placeholder={t('namePlaceholder')} placeholderTextColor={Colors.muted} /><Text style={styles.label}>{t('ageLabel')}</Text><View style={styles.options}>{ageRanges.map((range) => <Option key={range} label={t(ageLabels[range])} selected={profile.ageRange === range} onPress={() => update({ ageRange: range })} />)}</View></View>}
     {step === 3 && <View><Text style={styles.title}>{t('onboardingGoalsTitle')}</Text><Text style={styles.description}>{t('goalsDescription')}</Text><View style={styles.options}>{goals.map((goal) => <Option key={goal.key} label={t(goal.label)} selected={profile.goals?.includes(goal.key) ?? false} onPress={() => update({ goals: toggleGoal(profile.goals ?? [], goal.key) })} />)}</View></View>}
-    {step === 4 && <View><Text style={styles.title}>{t('onboardingSummaryTitle')}</Text><Text style={styles.description}>{t('onboardingSummaryDescription')}</Text><View style={styles.summary}><Text style={styles.summaryLabel}>{t('nameLabel')}</Text><Text style={styles.summaryValue}>{profile.name}</Text><Text style={styles.summaryLabel}>{t('recommendedRoute')}</Text><Text style={styles.summaryValue}>{t('recommendedRouteName')}</Text></View></View>}
+    {step === 4 && <View><Text style={styles.title}>{t('onboardingSummaryTitle')}</Text><Text style={styles.description}>{t('onboardingSummaryDescription')}</Text><View style={styles.summary}><Text style={styles.summaryLabel}>{t('nameLabel')}</Text><Text style={styles.summaryValue}>{profile.name}</Text><Text style={styles.summaryLabel}>{t('recommendedRoute')}</Text><Text style={styles.summaryValue}>{t(routeNameKeys[getRecommendedRoute(profile.goals ?? []).id])}</Text></View></View>}
     {error ? <Text style={styles.error}>{error}</Text> : null}
     <View style={styles.actions}>{step > 1 && <Pressable onPress={() => { setError(''); setStep((current) => current - 1); }}><Text style={styles.back}>{t('back')}</Text></Pressable>}<Pressable style={styles.primaryButton} onPress={step === 4 ? finish : next}><Text style={styles.primaryButtonText}>{step === 4 ? t('finishOnboarding') : t('next')}</Text></Pressable></View>
   </ScrollView>;

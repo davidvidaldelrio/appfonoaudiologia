@@ -16,3 +16,14 @@ export function toggleGoal(goals: Goal[], goal: Goal): Goal[] {
 export function canFinishOnboarding(profile: Partial<LocalProfile>): profile is LocalProfile {
   return Boolean(profile.name?.trim() && profile.userType && profile.ageRange && profile.goals?.length);
 }
+
+export function upsertProfile(profiles: LocalProfile[], profile: LocalProfile): LocalProfile[] {
+  const name = profile.name.trim();
+  if (!name) return profiles;
+  const nextProfile = { ...profile, name };
+  const index = profiles.findIndex((candidate) => candidate.name.trim().toLowerCase() === name.toLowerCase());
+  if (index >= 0) {
+    return profiles.map((candidate, candidateIndex) => (candidateIndex === index ? nextProfile : candidate));
+  }
+  return [...profiles, nextProfile];
+}
