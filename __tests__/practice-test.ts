@@ -54,6 +54,18 @@ describe('practice', () => {
     expect(getDailyGoalProgress(12)).toBe(100);
   });
 
+  it('maneja bien los umbrales de nivel y la racha al romper la secuencia', () => {
+    expect(getLevel(0)).toBe(1);
+    expect(getLevel(99)).toBe(1);
+    expect(getLevel(100)).toBe(2);
+    expect(getLevelProgress(99)).toBe(99);
+    expect(getLevelProgress(100)).toBe(0);
+
+    const firstDay = recordPractice(initialProgress, 'lectura', 85, new Date('2026-09-28T12:00:00Z'));
+    const thirdDay = recordPractice(firstDay, 'lectura', 90, new Date('2026-09-30T12:00:00Z'));
+    expect(thirdDay.currentStreak).toBe(1);
+  });
+
   it('reinicia los minutos al cargar un día diferente', () => {
     const previousDay = recordPractice(initialProgress, 'lectura', 80, new Date('2026-09-28T12:00:00Z'));
     expect(resetDailyProgress(previousDay, new Date('2026-09-29T08:00:00Z')).minutesToday).toBe(0);

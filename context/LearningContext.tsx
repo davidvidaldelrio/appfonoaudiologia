@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { LocalProfile, upsertProfile } from '@/services/onboarding';
-import { syncProfileToSupabase, getSupabaseConfig } from '@/services/supabase';
+import { syncProfileToSupabase, syncProgressToSupabase, getSupabaseConfig } from '@/services/supabase';
 import { initialProgress, ProgressState, recordPractice as savePractice, resetDailyProgress } from '@/services/progress';
 
 type LearningState = {
@@ -58,19 +58,25 @@ export function LearningProvider({ children }: PropsWithChildren) {
 
   const completeOnboarding = async (nextProfile: LocalProfile) => {
     const nextProfiles = upsertProfile(profiles, nextProfile);
+    await AsyncStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
     await AsyncStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(nextProfiles));
     await AsyncStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, nextProfile.name);
     if (getSupabaseConfig().ready) {
-      await syncProfileToSupabase(nextProfile);
+      await syncProfileToSupabase(nextProfile).catch(() => undefined);
     }
     setProfiles(nextProfiles);
     setProfile(nextProfile);
   };
 
   const recordPractice = async (routeId: string, score: number) => {
-    const nextProgress = savePractice(progress, routeId, score);
-    await AsyncStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress));
-    setProgress(nextProgress);
+    setProgress((currentProgress) => {
+      const nextProgress = savePractice(currentProgress, routeId, score);
+      AsyncStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress)).catch(() => undefined);
+      if (profile?.name) {
+        syncProgressToSupabase(nextProgress, profile.name).catch(() => undefined);
+      }
+      return nextProgress;
+    });
   };
 
   const setActiveProfile = (name: string) => {

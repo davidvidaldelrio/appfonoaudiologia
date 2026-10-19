@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components/Screen';
@@ -11,13 +11,14 @@ import { t } from '@/services/i18n';
 
 export default function ActivityScreen() {
   const { routeId } = useLocalSearchParams<{ routeId: string }>();
-  const { recordPractice } = useLearning();
+  const { progress, recordPractice } = useLearning();
   const recorder = useAudioRecorderService();
   const [feedback, setFeedback] = useState<PracticeFeedback | null>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [recordingError, setRecordingError] = useState(false);
   const activity = getRouteActivity(routeId ?? 'pronunciacion');
   const isPronunciation = routeId === 'pronunciacion';
+  const earnedXp = useMemo(() => Math.max(10, Math.round((feedback?.score ?? 0) / 2)), [feedback]);
 
   const recordAnswer = async () => {
     if (!isPronunciation) {
@@ -46,11 +47,13 @@ export default function ActivityScreen() {
     }, 400);
   };
 
-  return <Screen><View style={styles.content}><Text style={styles.eyebrow}>{t('activityEyebrow')}</Text><Text style={styles.title}>{activity.title}</Text><Text style={styles.subtitle}>{activity.prompt}</Text><View style={styles.activity}><Text style={styles.mouth}>{activity.icon}</Text><Text style={styles.prompt}>{activity.prompt}</Text><Text style={styles.word}>{activity.word}</Text><Text style={styles.hint}>{activity.hint}</Text>{recordingError && <Text style={styles.error}>{t('microphonePermissionDenied')}</Text>}{feedback ? <Feedback feedback={feedback} /> : <Pressable style={styles.record} onPress={recordAnswer} disabled={isEvaluating}><Text style={styles.recordText}>{isEvaluating ? t('evaluating') : isPronunciation ? recorder.isRecording ? `■  ${t('stopRecording')}` : `●  ${t('recordAnswer')}` : t('completeActivity')}</Text></Pressable>}{recorder.isRecording && <Text style={styles.timer}>{t('recordingSeconds').replace('{seconds}', String(Math.round(recorder.durationMillis / 1000)))}</Text>}</View>{feedback && <View style={styles.actions}><Pressable onPress={() => setFeedback(null)}><Text style={styles.secondary}>{t('practiceAgain')}</Text></Pressable><Pressable style={styles.primary} onPress={() => router.replace('/(tabs)/routes')}><Text style={styles.primaryText}>{t('backToRoutes')}</Text></Pressable></View>}</View></Screen>;
+  return <Screen><View style={styles.content}><Text style={styles.eyebrow}>{t('activityEyebrow')}</Text><Text style={styles.title}>{activity.title}</Text><Text style={styles.subtitle}>{activity.prompt}</Text><View style={styles.activity}><Text style={styles.mouth}>{activity.icon}</Text><Text style={styles.prompt}>{activity.prompt}</Text><Text style={styles.word}>{activity.word}</Text><Text style={styles.hint}>{activity.hint}</Text>{recordingError && <Text style={styles.error}>{t('microphonePermissionDenied')}</Text>}{feedback ? <Feedback feedback={feedback} xp={earnedXp} progressSummary={progress} /> : <Pressable style={styles.record} onPress={recordAnswer} disabled={isEvaluating}><Text style={styles.recordText}>{isEvaluating ? t('evaluating') : isPronunciation ? recorder.isRecording ? `■  ${t('stopRecording')}` : `●  ${t('recordAnswer')}` : t('completeActivity')}</Text></Pressable>}{recorder.isRecording && <Text style={styles.timer}>{t('recordingSeconds').replace('{seconds}', String(Math.round(recorder.durationMillis / 1000)))}</Text>}</View>{feedback && <View style={styles.actions}><Pressable onPress={() => setFeedback(null)}><Text style={styles.secondary}>{t('practiceAgain')}</Text></Pressable><Pressable style={styles.primary} onPress={() => router.replace('/(tabs)/routes')}><Text style={styles.primaryText}>{t('backToRoutes')}</Text></Pressable></View>}</View></Screen>;
 }
 
-function Feedback({ feedback }: { feedback: PracticeFeedback }) {
-  return <View style={styles.feedback}><Text style={styles.feedbackTitle}>{feedback.title}</Text><Text style={styles.score}>{feedback.score}</Text><Text style={styles.scoreLabel}>{t('feedbackScore')}</Text><Text style={styles.feedbackMessage}>{feedback.message}</Text><Text style={styles.minutes}>{t('minutesAdded')}</Text></View>;
+function Feedback({ feedback, xp, progressSummary }: { feedback: PracticeFeedback; xp: number; progressSummary: ReturnType<typeof useLearning>['progress'] }) {
+  const routeScore = progressSummary.routeScores[feedback.message.includes('lectura') ? 'lectura' : progressSummary.sessions.at(-1)?.routeId ?? 'pronunciacion'] ?? feedback.score;
+
+  return <View style={styles.feedback}><Text style={styles.feedbackTitle}>{feedback.title}</Text><Text style={styles.score}>{feedback.score}</Text><Text style={styles.scoreLabel}>{t('feedbackScore')}</Text><Text style={styles.feedbackMessage}>{feedback.message}</Text><View style={styles.summary}><View style={styles.summaryItem}><Text style={styles.summaryLabel}>XP</Text><Text style={styles.summaryValue}>{xp}</Text></View><View style={styles.summaryItem}><Text style={styles.summaryLabel}>Ruta</Text><Text style={styles.summaryValue}>{routeScore > 0 ? 'Completada' : 'Listo'}</Text></View></View><Text style={styles.minutes}>{t('minutesAdded')}</Text></View>;
 }
 
 const styles = StyleSheet.create({
@@ -72,6 +75,10 @@ const styles = StyleSheet.create({
   score: { color: Colors.ink, fontSize: 52, fontWeight: '800', marginTop: 8 },
   scoreLabel: { color: Colors.muted, fontSize: 12 },
   feedbackMessage: { color: Colors.muted, lineHeight: 20, textAlign: 'center', marginTop: 14 },
+  summary: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 18, gap: 12 },
+  summaryItem: { flex: 1, backgroundColor: '#F3F0FF', borderRadius: 14, padding: 12, alignItems: 'center' },
+  summaryLabel: { color: Colors.muted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  summaryValue: { color: Colors.ink, fontSize: 18, fontWeight: '800', marginTop: 4 },
   minutes: { color: Colors.success, fontSize: 12, fontWeight: '700', textAlign: 'center', marginTop: 16 },
   actions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24 },
   secondary: { color: Colors.primary, fontWeight: '700' },

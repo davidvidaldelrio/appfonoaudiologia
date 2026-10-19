@@ -13,10 +13,21 @@ Proyecto de referencia (stack y convenciones): `registro_agua_app`.
 
 - [x] Análisis de la base funcional (mapa conceptual + wireframes)
 - [x] Arquitectura y modelo de datos propuestos
-- [ ] Scaffold del proyecto
-- [ ] MVP Fase 1
+- [x] Scaffold del proyecto y navegación principal
+- [x] MVP Fase 1: onboarding, perfiles, rutas, práctica y progreso base
+- [ ] Integración de evaluación de voz real con servicio externo
+- [ ] Persistencia completa con Supabase y sincronización offline
+- [ ] Validación Nativo/QA con Expo y dispositivos reales
+
+## Siguiente prioridad
+
+La siguiente fase real no es monetización ni panel admin: es cerrar la evaluación de voz y la persistencia real.
+
+1. Definir el servicio de scoring: Azure Speech Pronunciation Assessment vs. alternativa interna.
+2. Aislar la lógica de evaluación detrás de `services/voice.ts` para poder cambiar proveedor sin tocar pantallas.
+3. Conectar `services/supabase.ts` con perfiles, rutas y progreso reales.
+4. Validar flujo completo en dispositivo: onboarding → práctica con micrófono → feedback → progreso → racha.
 
 ## Nombre
 
-> Pendiente de decisión: el material original alterna entre **"HáblaMejor"** y **"HábalaMejor"**.
-> Hay que fijar uno antes del scaffold (afecta a `name`, `slug`, `scheme` y `package`).
+> El proyecto quedó definido como **"HáblaMejor"** para mantener consistencia en `app.json`, `scheme` y branding visual.
